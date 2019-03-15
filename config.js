@@ -4,6 +4,7 @@ const config = {
     USERTOKENS_S3_BUCKET: process.env.USERTOKENS_S3_BUCKET,
     USERDATA_S3_SSEC_KEY: process.env.USERDATA_S3_SSEC_KEY,
     AUTHREQ_S3_BUCKET: process.env.AUTHREQ_S3_BUCKET,
+    AUTHREQ_EXPIRE_MINS: process.env.AUTHREQ_EXPIRE_MINS,
     LOG_LEVEL: process.env.LOG_LEVEL
   }
   

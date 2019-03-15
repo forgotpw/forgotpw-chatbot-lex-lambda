@@ -99,3 +99,9 @@ export AWS_ENV="dev" && export PROFILE="fpw$AWS_ENV"
 # pip install iam-starter
 iam-starter --profile $PROFILE --command sls deploy --verbose
 ```
+
+# License
+
+GNU General Public License v3.0
+
+See [LICENSE](LICENSE.txt) to see the full text.
