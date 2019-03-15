@@ -1,0 +1,62 @@
+service: chatbot-lex-handler
+
+# pin to a specific Serverless version
+frameworkVersion: ">=1.2.0 <2.0.0"
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs8.10
+  deploymentBucket: forgotpw-deploy-${env:AWS_ENV, 'dev'}
+  stage: live
+  logRetentionInDays: 14 # cloudwatch logs
+  timeout: 10 # seconds
+  versionFunctions: true
+  iamRoleStatements:
+    -
+      Effect: Allow
+      Action:
+        - s3:PutObject
+      Resource: arn:aws:s3:::forgotpw-authorized-requests-${env:AWS_ENV, 'dev'}/*
+
+plugins:
+  - serverless-mocha-plugin
+  - serverless-prune-plugin
+
+custom:
+  # serverless-prune-plugin
+  prune:
+    automatic: true
+    number: 5
+
+package:
+      exclude:
+        - .git/**
+
+functions:
+  fpw-chatbot-lex-handler:
+    name: 'fpw-chatbot-lex-handler'
+    handler: index.handler
+    environment:
+      USERTOKEN_HASH_HMAC: ${ssm:/fpw/USERTOKEN_HASH_HMAC~true}
+      USERTOKENS_S3_BUCKET: forgotpw-usertokens-${env:AWS_ENV, 'dev'}
+      USERDATA_S3_SSEC_KEY: ${ssm:/fpw/USERDATA_S3_SSEC_KEY~true}
+      AUTHREQ_S3_BUCKET: forgotpw-userdata-${env:AWS_ENV, 'dev'}
+      LOG_LEVEL: 'debug'
+
+resources:
+  Resources:
+    AuthorizedRequestsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: forgotpw-authorized-requests-${env:AWS_ENV, 'dev'}
+        AccessControl: Private
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            -
+              ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        LifecycleConfiguration:
+          Rules:
+          - ExpirationInDays: 1
+            Status: Enabled
