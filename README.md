@@ -6,9 +6,11 @@ Respond to Amazon Lex chat requests for all intents
 
 ### Intent: Hello
 
+```
 You> Hi
-FPW> Hi, looks like you're new.  You can tell me an application you want to store a password for, like 'Store password for Amazon'.  I'll text you back a link to enter it (don't type your password in the chat!).  Just say 'help' at any time for more information.  Since this is your first time, I highly recommend you view our recommended password strategy, take a look at:
+FPW> Hi.  You can tell me something you want to store a password for, like "Store password for Amazon".  I'll text you back a link to enter it (don't type your password in the chat!).  Just say 'help' at any time for more information.  Since this is your first time, I highly recommend you view our recommended password strategy, take a look at:
 https://www.forgotpw.com/#tips
+```
 
 ### Intent: Store Password
 
