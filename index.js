@@ -1,7 +1,7 @@
 const logger = require('./logger');
 const authorizedRequest = require('./lib/authorizedRequest');
-const PhoneTokenService = require('phone-token-service')
-const config = require("./config");
+const config = require('./config');
+const Mustache = require('mustache')
 
 async function handler(event, context, callback)  {
     try {
@@ -40,29 +40,41 @@ async function dispatchIntent(intentRequest) {
 
     switch(intentName) {
         case 'Hello':
-            return helloController(intentRequest);
+            return await helloController(intentRequest);
         case 'StorePassword':
             return await storePasswordController(intentRequest);
+        case 'RetrievePassword':
+            return await retrievePasswordController(intentRequest);
         default:
             logger.error(`Unhandled intent received: ${intentName}`);
             return lexResponse(
                 intentRequest.sessionAttributes,
                 'Failed',
-             `Sorry I'm not sure how to help with that.`
+                `Sorry I'm not sure how to help with that.`
             );
     }
 }
 
-function helloController(intentRequest) {
+async function readTemplate(templateName) {
+    const fs = require('fs');
+    const util = require('util');
+    const readFile = util.promisify(fs.readFile);
+    const contents = await readFile(`chat-templates/${templateName}`, 'utf8');
+    return contents;
+}
+
+async function helloController(intentRequest) {
     const sessionAttributes = intentRequest.sessionAttributes;
     const phone = intentRequest.userId;
 
     let firstTime = true;
+    let msg = '';
 
-    let msg = `Hi${firstTime ? ", looks like you're new." : ""}.  You can tell me something you want to store a password for, like "Store password for Amazon".  I'll text you back a link to enter it (don't type your password in the chat!).`;
     if (firstTime) {
-        msg += `  Since this is your first time, I highly recommend you view our recommended password strategy, take a look at:\n`;
-        msg += `https://www.forgotpw.com/#tips`;
+        const template = await readTemplate('hello-firsttime.tmpl');
+        msg = template;
+
+        // TODO: mark as not first time visitor anymore
     }
 
     return lexResponse(
@@ -72,28 +84,45 @@ function helloController(intentRequest) {
     );
 }
 
-
 async function storePasswordController(intentRequest) {
     const sessionAttributes = intentRequest.sessionAttributes;
     const slots = intentRequest.currentIntent.slots;
     const rawApplication = slots.Application;
     const phone = intentRequest.userId;
 
-    const phoneTokenService = new PhoneTokenService({
-        // salt for hashing algorithm 
-        tokenHashHmac: config.USERTOKEN_HASH_HMAC,
-        // s3 bucket for storing the mapping relationship
-        s3bucket: 'forgotpw-usertokens-dev',
-        // retrieve country code from ip address via https://ipapi.co/country/
-        defaultCountryCode: 'US'
-    });
-    const userToken = await phoneTokenService.getTokenFromPhone(phone);
-    let arid = await authorizedRequest.generate(userToken, rawApplication);
-
+    const arid = await authorizedRequest.generateAuthorizedRequestFromPhone(phone, rawApplication);
+    const template = await readTemplate('store.tmpl');
+    const viewData = {
+        rawApplication,
+        url: `https://app.forgotpw.com/#/store?arid=${arid}`
+    }
+    let msg = Mustache.render(template, viewData);
+    
     return lexResponse(
         sessionAttributes,
         'Fulfilled',
-        `To store a password for ${rawApplication}, click: \nhttps://app.forgotpw.com/#/store?arid=${arid}`
+        msg
+    );
+}
+
+async function retrievePasswordController(intentRequest) {
+    const sessionAttributes = intentRequest.sessionAttributes;
+    const slots = intentRequest.currentIntent.slots;
+    const rawApplication = slots.Application;
+    const phone = intentRequest.userId;
+
+    const arid = await authorizedRequest.generateAuthorizedRequestFromPhone(phone, rawApplication);
+    const template = await readTemplate('retrieve.tmpl');
+    const viewData = {
+        rawApplication,
+        url: `https://app.forgotpw.com/#/retrieve?arid=${arid}`
+    }
+    let msg = Mustache.render(template, viewData);
+    
+    return lexResponse(
+        sessionAttributes,
+        'Fulfilled',
+        msg
     );
 }
 
