@@ -41,6 +41,8 @@ async function dispatchIntent(intentRequest) {
     switch(intentName) {
         case 'Hello':
             return await helloController(intentRequest);
+        case 'Help':
+            return await helpController(intentRequest);
         case 'StorePassword':
             return await storePasswordController(intentRequest);
         case 'RetrievePassword':
@@ -75,6 +77,25 @@ async function helloController(intentRequest) {
         msg = template;
 
         // TODO: mark as not first time visitor anymore
+    }
+
+    return lexResponse(
+        sessionAttributes,
+        'Fulfilled',
+        msg
+    );
+}
+
+async function helpController(intentRequest) {
+    const sessionAttributes = intentRequest.sessionAttributes;
+    const phone = intentRequest.userId;
+
+    let firstTime = true;
+    let msg = '';
+
+    if (firstTime) {
+        const template = await readTemplate('help.tmpl');
+        msg = template;
     }
 
     return lexResponse(

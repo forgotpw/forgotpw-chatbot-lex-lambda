@@ -4,21 +4,14 @@ Respond to Amazon Lex chat requests for all intents
 
 ## Intents
 
-### Intent: Hello
+This lambda function will respond to intents determined by AWS Lex which will receive the text messages, determine the intent, and invoke this lambda function with the determined event.
 
-```
-You> Hi
-FPW> Hi.  You can tell me something you want to store a password for, like "Store password for Amazon".  I'll text you back a link to enter it (don't type your password in the chat!).  Just say 'help' at any time for more information.  Since this is your first time, I highly recommend you view our recommended password strategy, take a look at:
-https://www.forgotpw.com/#tips
-```
-
-### Intent: Store Password
+Example Intent: Store Password
 
 ```
 You> Store password for Amazon
 FPW> Click here to enter your password for Amazon:
 https://app.forgotpw.com/#/store?arid=jEH93Hlx9t1xWp
-FPW> Your password for Amazon has been stored.
 ```
 
 ```
@@ -37,28 +30,6 @@ You> Yes
 FPW> Click here to enter your password for Amazon:
 https://app.forgotpw.com/#/store?arid=jEH93Hlx9t1xWp
 FPW> Your password for Amazon has been stored.
-```
-
-### Intent: Retrieve Password
-
-```
-You> What's my password to Amazon?
-FPW> Click here:
-https://app.forgotpw.com/#/show?token=4gsdpUh3$daxq
-```
-
-```
-You> Amazon
-FPW> Click here:
-https://app.forgotpw.com/#/show?token=jeDc93vbRW3wp
-```
-
-```
-You> Store password for Amazon
-FPW> I found multiple similar applications. Do you mean 1) Amazon.com or 2) Amazon Web Services?
-You> 1
-FPW> Click here:
-https://app.forgotpw.com/#/store?arid=jEH93Hlx9t1xWp
 ```
 
 ## Authorized Requests
