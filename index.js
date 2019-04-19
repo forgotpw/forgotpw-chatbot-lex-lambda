@@ -71,15 +71,25 @@ async function helloController(intentRequest) {
     const sessionAttributes = intentRequest.sessionAttributes;
     const phone = intentRequest.userId;
 
-    let firstTime = true;
+    const phoneTokenService = new PhoneTokenService({
+        tokenHashHmac: config.USERTOKEN_HASH_HMAC,
+        s3bucket: config.USERTOKENS_S3_BUCKET,
+        defaultCountryCode: 'US'
+      })
+    const exists = await phoneTokenService.doesTokenExistForPhone(phone);
+    const firstTime = !exists;
     let msg = '';
-
+    let templateFilename = null;
     if (firstTime) {
-        const template = await readTemplate('hello-firsttime.tmpl');
-        msg = template;
-
-        // TODO: mark as not first time visitor anymore
+        templateFilename = 'hello-firsttime.tmpl';
+        // TODO: mark as not first time visitor anymore ?
+        // (this will happen automatically after storing or retrieving any password)
+    } else {
+        templateFilename = 'hello.tmpl';
     }
+
+    const template = await readTemplate(templateFilename);
+    msg = template;
 
     return lexResponse(
         sessionAttributes,
@@ -118,7 +128,7 @@ async function storePasswordController(intentRequest) {
     const subdomain = config.AWS_ENV == 'dev' ? 'app-dev' : 'app';
     const viewData = {
         rawApplication,
-        url: `https://${subdomain}.forgotpw.com/#/store?arid=${arid}`
+        url: `https://${subdomain}.forgotpw.com/#/set?arid=${arid}`
     }
     let msg = Mustache.render(template, viewData);
     
@@ -166,7 +176,7 @@ async function retrievePasswordController(intentRequest) {
         const subdomain = config.AWS_ENV == 'dev' ? 'app-dev' : 'app';
         const viewData = {
             rawApplication,
-            url: `https://${subdomain}.forgotpw.com/#/retrieve?arid=${arid}`
+            url: `https://${subdomain}.forgotpw.com/#/get?arid=${arid}`
         }
         msg = Mustache.render(template, viewData);
     }
