@@ -31,6 +31,16 @@ provider:
       Resource:
         - arn:aws:s3:::forgotpw-usertokens-${env:AWS_ENV, 'dev'}/*
         - arn:aws:s3:::forgotpw-usertokens-${env:AWS_ENV, 'dev'}
+    -
+      Effect: Allow
+      Action:
+        - s3:GetObject
+      Resource: arn:aws:s3:::forgotpw-userdata-${env:AWS_ENV, 'dev'}/users/*
+    -
+      Effect: Allow
+      Action:
+        - s3:ListBucket
+      Resource: arn:aws:s3:::forgotpw-userdata-*
 
 
 plugins:
@@ -52,11 +62,15 @@ functions:
     name: 'fpw-chatbot-lex-handler'
     handler: index.handler
     environment:
+      AWS_ENV: ${env:AWS_ENV, 'dev'}
       USERTOKEN_HASH_HMAC: ${ssm:/fpw/USERTOKEN_HASH_HMAC~true}
       USERTOKENS_S3_BUCKET: forgotpw-usertokens-${env:AWS_ENV, 'dev'}
       USERDATA_S3_SSEC_KEY: ${ssm:/fpw/USERDATA_S3_SSEC_KEY~true}
+      USERDATA_S3_BUCKET: forgotpw-userdata-${env:AWS_ENV, 'dev'}
       AUTHREQ_S3_BUCKET: forgotpw-authorized-requests-${env:AWS_ENV, 'dev'}
       AUTHREQ_EXPIRE_MINS: 10
+      MATCH_HIGH_PCT: 0.70
+      MATCH_LOW_PCT: 0.50
       LOG_LEVEL: 'debug'
 
 resources:

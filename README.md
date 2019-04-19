@@ -67,9 +67,9 @@ npm install serverless -g
 ## Deploy
 
 ```shell
-export AWS_ENV="dev" && export PROFILE="fpw$AWS_ENV"
-
 # pip install iam-starter
+
+export AWS_ENV="dev" && export PROFILE="fpw$AWS_ENV"
 iam-starter --profile $PROFILE --command sls deploy --verbose
 ```
 
