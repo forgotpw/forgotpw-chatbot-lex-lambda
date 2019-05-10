@@ -71,6 +71,7 @@ functions:
       AUTHREQ_EXPIRE_MINS: 10
       MATCH_HIGH_PCT: 0.70
       MATCH_LOW_PCT: 0.50
+      DASHBOT_API_KEY: ${ssm:/fpw/DASHBOT_API_KEY~true} 
       LOG_LEVEL: 'debug'
 
 resources:

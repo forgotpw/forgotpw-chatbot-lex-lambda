@@ -8,7 +8,8 @@ const config = {
     AUTHREQ_S3_BUCKET: process.env.AUTHREQ_S3_BUCKET,
     AUTHREQ_EXPIRE_MINS: process.env.AUTHREQ_EXPIRE_MINS,
     MATCH_HIGH_PCT: process.env.MATCH_HIGH_PCT,
-    MATCH_LOW_PCT: process.env.MATCH_LOW_PCT,  
+    MATCH_LOW_PCT: process.env.MATCH_LOW_PCT,
+    DASHBOT_API_KEY: process.env.DASHBOT_API_KEY,
     LOG_LEVEL: process.env.LOG_LEVEL
   }
   
