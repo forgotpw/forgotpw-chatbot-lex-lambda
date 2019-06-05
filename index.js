@@ -151,7 +151,7 @@ async function storePasswordController(event) {
     const subdomain = config.AWS_ENV == 'dev' ? 'app-dev' : 'app';
     const viewData = {
         rawApplication,
-        url: `https://${subdomain}.forgotpw.com/#/set?arid=${arid}`
+        url: `https://${subdomain}.rosa.bot/#/set?arid=${arid}`
     }
     let msg = Mustache.render(template, viewData);
     
@@ -192,7 +192,7 @@ async function retrievePasswordController(event, userToken) {
         const subdomain = config.AWS_ENV == 'dev' ? 'app-dev' : 'app';
         const viewData = {
             rawApplication,
-            url: `https://${subdomain}.forgotpw.com/#/get?arid=${arid}`
+            url: `https://${subdomain}.rosa.bot/#/get?arid=${arid}`
         }
         msg = Mustache.render(template, viewData);
     }
