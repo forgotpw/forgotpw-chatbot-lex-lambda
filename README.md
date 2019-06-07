@@ -1,5 +1,7 @@
 # Chatbot Lex Handler Lambda
 
+**NOTE: Rosa (www.rosa.bot) is the new name for ForgotPW**
+
 Respond to Amazon Lex chat requests for all intents
 
 ## Intents
