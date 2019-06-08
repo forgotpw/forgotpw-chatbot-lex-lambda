@@ -10,6 +10,7 @@ const config = {
     MATCH_HIGH_PCT: process.env.MATCH_HIGH_PCT,
     MATCH_LOW_PCT: process.env.MATCH_LOW_PCT,
     DASHBOT_API_KEY: process.env.DASHBOT_API_KEY,
+    ARID_LENGTH: process.env.ARID_LENGTH,
     LOG_LEVEL: process.env.LOG_LEVEL
   }
   
