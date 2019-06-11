@@ -74,6 +74,8 @@ async function dispatchIntent(userToken, firstTime, event) {
     switch(intentName) {
         case 'Hello':
             return await helloController(event, firstTime);
+        case 'SendVcard':
+            return await sendVcardController(event);
         case 'Help':
             return await helpController(event);
         case 'StorePassword':
@@ -115,11 +117,50 @@ async function helloController(event, firstTime) {
     const template = await readTemplate(templateFilename);
     msg = template;
 
+    if (firstTime) {
+        await sendVcard(phone);
+    }
+
     return lexResponse(
         sessionAttributes,
         'Fulfilled',
         msg
     );
+}
+
+async function sendVcardController(event) {
+    const sessionAttributes = event.sessionAttributes;
+    const phone = event.userId;
+
+    await sendVcard(phone);
+
+    const template = await readTemplate('vcard.tmpl');
+    let msg = template;
+
+    return lexResponse(
+        sessionAttributes,
+        'Fulfilled',
+        msg
+    );
+}
+
+async function sendVcard(phone) {
+    const twilio = require('twilio')(this.twilioAccountSid, this.twilioAuthToken);
+
+    try {
+        logger.debug(`Sending vcard via Twilio ...`);
+        let responseData = await twilio.messages
+        .create({
+           body: 'Open the contact card I sent to add me to your contacts.',
+           from: config.TWILIO_FROM_NUMBER,
+           to: phone,
+           mediaUrl: 'https://www.rosa.bot/rosa.vcf'
+         });
+        //logger.debug(`Received response data from Twilio: ${JSON.stringify(responseData)}`);
+    }
+    catch (err) {
+        logger.error(`Error from Twilio: ${err}`);
+    }
 }
 
 async function helpController(event) {

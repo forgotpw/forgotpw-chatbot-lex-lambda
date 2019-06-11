@@ -73,6 +73,9 @@ functions:
       MATCH_LOW_PCT: 0.50
       DASHBOT_API_KEY: ${ssm:/fpw/DASHBOT_API_KEY~true}
       ARID_LENGTH: 9
+      TWILIO_ACCOUNT_SID: ${ssm:/fpw/TWILIO_ACCOUNT_SID~true}
+      TWILIO_AUTH_TOKEN: ${ssm:/fpw/TWILIO_AUTH_TOKEN~true}
+      TWILIO_FROM_NUMBER: ${ssm:/fpw/TWILIO_FROM_NUMBER}
       LOG_LEVEL: 'debug'
 
 resources:

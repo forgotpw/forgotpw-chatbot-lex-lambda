@@ -11,6 +11,10 @@ const config = {
     MATCH_LOW_PCT: process.env.MATCH_LOW_PCT,
     DASHBOT_API_KEY: process.env.DASHBOT_API_KEY,
     ARID_LENGTH: process.env.ARID_LENGTH,
+    // twilio values for sending vcard outside of aws lex
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_FROM_NUMBER: process.env.TWILIO_FROM_NUMBER,  
     LOG_LEVEL: process.env.LOG_LEVEL
   }
   

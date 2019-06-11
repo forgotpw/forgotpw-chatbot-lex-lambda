@@ -13,7 +13,8 @@
     "mustache": "^3.0.1",
     "phone-token-service": "0.0.4",
     "string-normalizer": "1.0.1",
-    "string-similarity": "^3.0.0"
+    "string-similarity": "^3.0.0",
+    "twilio": "^3.31.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",
