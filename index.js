@@ -29,8 +29,6 @@ async function handler(event, context, callback)  {
         const firstTime = !exists;
         const userToken = await phoneTokenService.getTokenFromPhone(phone);
 
-        let lexResponse = await dispatchIntent(userToken, firstTime, event);
-
         // create a cleansed version of the event object to send to dashbot for analytics
         // (specifically strip out userId / phone)
         let platformJson = {
@@ -42,12 +40,18 @@ async function handler(event, context, callback)  {
             requestAttributes: event.requestAttributes
         }
 
-        await logToDashbot(
+        await logIncomingToDashbot(
             userToken,
             event.inputTranscript,
-            lexResponse.dialogAction.message.content,
             platformJson);
 
+        let lexResponse = await dispatchIntent(userToken, firstTime, event);
+
+        await logOutgoingToDashbot(
+            userToken,
+            lexResponse.dialogAction.message.content,
+            platformJson);
+    
         callback(null, lexResponse);
     }
     catch (err) {
@@ -73,9 +77,9 @@ async function dispatchIntent(userToken, firstTime, event) {
 
     switch(intentName) {
         case 'Hello':
-            return await helloController(event, firstTime);
+            return await helloController(event, userToken, firstTime);
         case 'SendVcard':
-            return await sendVcardController(event);
+            return await sendVcardController(event, userToken);
         case 'Help':
             return await helpController(event);
         case 'StorePassword':
@@ -100,7 +104,7 @@ async function readTemplate(templateName) {
     return contents;
 }
 
-async function helloController(event, firstTime) {
+async function helloController(event, userToken, firstTime) {
     const sessionAttributes = event.sessionAttributes;
     const phone = event.userId;
 
@@ -118,7 +122,7 @@ async function helloController(event, firstTime) {
     msg = template;
 
     if (firstTime) {
-        await sendVcard(phone);
+        await sendVcard(phone, userToken);
     }
 
     return lexResponse(
@@ -128,11 +132,11 @@ async function helloController(event, firstTime) {
     );
 }
 
-async function sendVcardController(event) {
+async function sendVcardController(event, userToken) {
     const sessionAttributes = event.sessionAttributes;
     const phone = event.userId;
 
-    await sendVcard(phone);
+    await sendVcard(phone, userToken);
 
     const template = await readTemplate('vcard.tmpl');
     let msg = template;
@@ -144,23 +148,35 @@ async function sendVcardController(event) {
     );
 }
 
-async function sendVcard(phone) {
+// sends the vcard raw via twilio, bypassing lex, which apparently can't send
+// the vcard itself
+async function sendVcard(phone, userToken) {
     const twilio = require('twilio')(this.twilioAccountSid, this.twilioAuthToken);
 
+    let params = {
+        body: 'Open the contact card I sent to add me to your contacts.',
+        from: config.TWILIO_FROM_NUMBER,
+        to: phone,
+        mediaUrl: 'https://www.rosa.bot/rosa.vcf'
+      };
     try {
         logger.debug(`Sending vcard via Twilio ...`);
-        let responseData = await twilio.messages
-        .create({
-           body: 'Open the contact card I sent to add me to your contacts.',
-           from: config.TWILIO_FROM_NUMBER,
-           to: phone,
-           mediaUrl: 'https://www.rosa.bot/rosa.vcf'
-         });
+        let responseData = await twilio.messages.create(params);
         //logger.debug(`Received response data from Twilio: ${JSON.stringify(responseData)}`);
     }
     catch (err) {
         logger.error(`Error from Twilio: ${err}`);
     }
+    // log outgoing message to dashbot
+    await logOutgoingToDashbot(
+        userToken,
+        params.body,
+        {
+            body: params.body,
+            from: params.from,
+            mediaUrl: params.mediaUrl
+        }
+    );
 }
 
 async function helpController(event) {
@@ -245,7 +261,7 @@ async function retrievePasswordController(event, userToken) {
     );
 }
 
-async function logToDashbot(userToken, incomingMessage, outgoingMessage, platformJson) {
+async function logIncomingToDashbot(userToken, incomingMessage, platformJson) {
     const configuration = {
         'debug': true,
         'redact': true, // automatically remove pii, including urls with arid's
@@ -259,6 +275,15 @@ async function logToDashbot(userToken, incomingMessage, outgoingMessage, platfor
     };
     logger.debug('Logging dashbot incoming message...')
     await dashbot.logIncoming(incomingMessageForDashbot);
+}
+
+async function logOutgoingToDashbot(userToken, outgoingMessage, platformJson) {
+    const configuration = {
+        'debug': true,
+        'redact': true, // automatically remove pii, including urls with arid's
+        'timeout': 1000,
+    };
+    const dashbot = require('dashbot')(config.DASHBOT_API_KEY, configuration).sms;
     const outgoingMessageForDashbot = {
         "text": outgoingMessage,
         "userId": userToken,
