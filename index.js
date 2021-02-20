@@ -4,6 +4,8 @@ const config = require('./config');
 const Mustache = require('mustache')
 const ApplicationService = require('./lib/applicationService')
 const PhoneTokenService = require('phone-token-service')
+const DashbotLib = require('./lib/dashbotLib');
+const TwilioLib = require('./lib/twilioLib');
 
 async function handler(event, context, callback)  {
     try {
@@ -40,14 +42,14 @@ async function handler(event, context, callback)  {
             requestAttributes: event.requestAttributes
         }
 
-        await logIncomingToDashbot(
+        await DashbotLib.logIncomingToDashbot(
             userToken,
             event.inputTranscript,
             platformJson);
 
         let lexResponse = await dispatchIntent(userToken, firstTime, event);
 
-        await logOutgoingToDashbot(
+        await DashbotLib.logOutgoingToDashbot(
             userToken,
             lexResponse.dialogAction.message.content,
             platformJson);
@@ -136,7 +138,7 @@ async function sendVcardController(event, userToken) {
     const sessionAttributes = event.sessionAttributes;
     const phone = event.userId;
 
-    await sendVcard(phone, userToken);
+    await TwilioLib.sendVcard(phone, userToken);
 
     const template = await readTemplate('vcard.tmpl');
     let msg = template;
@@ -145,37 +147,6 @@ async function sendVcardController(event, userToken) {
         sessionAttributes,
         'Fulfilled',
         msg
-    );
-}
-
-// sends the vcard raw via twilio, bypassing lex, which apparently can't send
-// the vcard itself
-async function sendVcard(phone, userToken) {
-    const twilio = require('twilio')(this.twilioAccountSid, this.twilioAuthToken);
-
-    let params = {
-        body: 'Open the contact card I sent to add me to your contacts.',
-        from: config.TWILIO_FROM_NUMBER,
-        to: phone,
-        mediaUrl: 'https://www.rosa.bot/rosa.vcf'
-      };
-    try {
-        logger.debug(`Sending vcard via Twilio ...`);
-        let responseData = await twilio.messages.create(params);
-        //logger.debug(`Received response data from Twilio: ${JSON.stringify(responseData)}`);
-    }
-    catch (err) {
-        logger.error(`Error from Twilio: ${err}`);
-    }
-    // log outgoing message to dashbot
-    await logOutgoingToDashbot(
-        userToken,
-        params.body,
-        {
-            body: params.body,
-            from: params.from,
-            mediaUrl: params.mediaUrl
-        }
     );
 }
 
@@ -259,38 +230,6 @@ async function retrievePasswordController(event, userToken) {
         'Fulfilled',
         msg
     );
-}
-
-async function logIncomingToDashbot(userToken, incomingMessage, platformJson) {
-    const configuration = {
-        'debug': true,
-        'redact': true, // automatically remove pii, including urls with arid's
-        'timeout': 1000,
-    };
-    const dashbot = require('dashbot')(config.DASHBOT_API_KEY, configuration).sms;
-    const incomingMessageForDashbot = {
-        "text": incomingMessage,
-        "userId": userToken,
-        "platformJson": platformJson
-    };
-    logger.debug('Logging dashbot incoming message...')
-    await dashbot.logIncoming(incomingMessageForDashbot);
-}
-
-async function logOutgoingToDashbot(userToken, outgoingMessage, platformJson) {
-    const configuration = {
-        'debug': true,
-        'redact': true, // automatically remove pii, including urls with arid's
-        'timeout': 1000,
-    };
-    const dashbot = require('dashbot')(config.DASHBOT_API_KEY, configuration).sms;
-    const outgoingMessageForDashbot = {
-        "text": outgoingMessage,
-        "userId": userToken,
-        "platformJson": platformJson
-    };
-    logger.debug('Logging dashbot outgoing message...')
-    await dashbot.logOutgoing(outgoingMessageForDashbot);
 }
 
 module.exports.handler = handler

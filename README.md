@@ -66,20 +66,29 @@ Install the Serverless CLI.
 npm install serverless -g
 ```
 
-## Deploy - Dev
+## Deploy
+
+The deploy environment will install production dependencies only to keep the package size within Lambda's 250MB limit.  Be sure to re-build the docker container each time.  Requires pip install iam-docker-run.
 
 ```shell
-# pip install iam-starter
-export AWS_ENV="dev" && export PROFILE="fpw$AWS_ENV"
-iam-starter --profile $PROFILE --command sls deploy --verbose
+export AWS_ENV="dev" # | prod
+export PROFILE="fpw$AWS_ENV"
+# must re-build docker container each deploy!
+docker build -f Dockerfile.deploy -t forgotpw-chatbot-lex-lambda:deploy .
+iam-docker-run \
+    --interactive \
+    --profile $PROFILE \
+    -e AWS_ENV \
+    --image forgotpw-chatbot-lex-lambda:deploy
 ```
 
-## Deploy - Prod
+## Troubleshooting
+
+You may need to run the following command to grant Lex permissions to invole the Lambda.
 
 ```shell
-# pip install iam-starter
 export AWS_ENV="prod" && export PROFILE="fpw$AWS_ENV"
-iam-starter --profile $PROFILE --command sls deploy --verbose
+iam-starter --profile $PROFILE --command aws lambda add-permission --function-name fpw-chatbot-lex-handler --statement-id chatbot-fulfillment --action "lambda:InvokeFunction" --principal "lex.amazonaws.com"
 ```
 
 # License

@@ -1,12 +1,12 @@
 service: chatbot-lex-handler
 
 # pin to a specific Serverless version
-frameworkVersion: ">=1.2.0 <2.0.0"
+frameworkVersion: ">=2.0.0 <3.0.0"
 
 provider:
   name: aws
   region: us-east-1
-  runtime: nodejs8.10
+  runtime: nodejs14.x
   deploymentBucket: forgotpw-deploy-${env:AWS_ENV, 'dev'}
   stage: live
   memorySize: 2048 # 1024 is default
@@ -45,7 +45,6 @@ provider:
 
 
 plugins:
-  - serverless-mocha-plugin
   - serverless-prune-plugin
 
 custom:
@@ -55,8 +54,11 @@ custom:
     number: 5
 
 package:
-      exclude:
-        - .git/**
+  exclude:
+    - .git/**
+    - .terraform/**
+    - terraform/**
+    - .serverless/**
 
 functions:
   fpw-chatbot-lex-handler:
